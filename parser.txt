@@ -1,0 +1,33 @@
+import spacy
+import pandas as pd
+
+nlp = spacy.load("en_core_web_sm")
+
+
+class TextProcess:
+
+  def __init__(self):
+    self.tokenList = []
+    self.zipfPair = []
+    self.wordList = pd.read_csv('zipf-complexity-scale.csv')
+
+  def tokenizeText(self, text):
+    self.tokenList.clear()
+    doc = nlp(text)
+    for token in doc:
+      #print(token, token.is_alpha, token.is_stop, token.lemma)
+      if (not token.is_stop) and token.is_alpha:
+        self.tokenList.append(token.lemma_.lower())
+    return self.tokenList
+
+  def findZipf(self, text):
+    self.tokenList = self.tokenizeText(text)
+    self.zipfPair = []
+    for word in self.tokenList:
+      row = self.wordList.loc[self.wordList['Word'] == word]
+      if not row.empty:
+        self.zipfPair.append((row.iloc[0]['Word'], row.iloc[0]['Zipf-value']))
+      else:
+        self.zipfPair.append((word, 0))
+    self.zipfPair = sorted(self.zipfPair, key=lambda t: t[1])
+    return self.zipfPair
